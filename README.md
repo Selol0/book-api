@@ -10,6 +10,8 @@ A simple REST API built with Spring Boot. Books are stored in memory
 | GET | `/books` | List all books | 200 |
 | GET | `/books/{id}` | Get a book by id (404 if not found) | 200 |
 | POST | `/books` | Add a new book | 201 |
+| PUT | `/books/{id}` | Update a book (404 if not found) | 200 |
+| DELETE | `/books/{id}` | Delete a book (404 if not found) | 204 |
 
 ## Example request
 
