@@ -26,6 +26,16 @@ Requires Java 21 or higher.
 ```bash
 ./mvnw spring-boot:run
 ```
+## Architecture
+Controller → Service → Repository → PostgreSQL
+
+- **Controller:** HTTP requests and responses
+- **Service:** Business rules (e.g. duplicate books return 409 Conflict)
+- **Repository:** Spring Data JPA database access
+
+## Known Limitations
+- Duplicate-book detection is case-insensitive, but Turkish characters
+  (`ı`/`I`, `i`/`İ`) are not normalized.
 
 The API starts on `http://localhost:8080`.
 
