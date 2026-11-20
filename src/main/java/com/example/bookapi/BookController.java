@@ -17,49 +17,42 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/books")
 public class BookController {
 
-    private final BookRepository bookRepository;
+    private final BookService bookService;
 
-    public BookController(BookRepository bookRepository) {
-        this.bookRepository = bookRepository;
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
     }
 
     @GetMapping
     public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+        return bookService.getAllBooks();
     }
 
     @PostMapping
     public ResponseEntity<Book> addBook(@RequestBody Book book) {
-        book.setId(null);
-        Book saved = bookRepository.save(book);
+        Book saved = bookService.addBook(book);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Book> getBook(@PathVariable Integer id) {
-        return bookRepository.findById(id)
+        return bookService.getBookById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Book> updateBook(@PathVariable Integer id, @RequestBody Book updated) {
-        return bookRepository.findById(id)
-                .map(book -> {
-                    book.setTitle(updated.getTitle());
-                    book.setAuthor(updated.getAuthor());
-                    book.setBorrowed(updated.isBorrowed());
-                    return ResponseEntity.ok(bookRepository.save(book));
-                })
+        return bookService.updateBook(id, updated)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable Integer id) {
-        if (!bookRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+        if (bookService.deleteBook(id)) {
+            return ResponseEntity.noContent().build();
         }
-        bookRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 }
