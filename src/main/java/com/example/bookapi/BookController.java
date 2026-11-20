@@ -1,5 +1,5 @@
 package com.example.bookapi;
-import java.util.ArrayList;
+
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -16,49 +16,50 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/books")
 public class BookController {
-	private final List<Book> books = new ArrayList<>();
-    private int nextId = 1;
+
+    private final BookRepository bookRepository;
+
+    public BookController(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }
 
     @GetMapping
     public List<Book> getAllBooks() {
-        return books;
+        return bookRepository.findAll();
     }
 
     @PostMapping
     public ResponseEntity<Book> addBook(@RequestBody Book book) {
-        book.setId(nextId++);
-        books.add(book);
-        return ResponseEntity.status(HttpStatus.CREATED).body(book);
+        book.setId(null);
+        Book saved = bookRepository.save(book);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Book> getBook(@PathVariable int id) {
-        for (Book book : books) {
-            if (book.getId() == id) {
-                return ResponseEntity.ok(book);
-            }
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Book> getBook(@PathVariable Integer id) {
+        return bookRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
+
     @PutMapping("/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable int id, @RequestBody Book updated) {
-        for (Book book : books) {
-            if (book.getId() == id) {
-                book.setTitle(updated.getTitle());
-                book.setAuthor(updated.getAuthor());
-                book.setBarrowed(updated.isBarrowed());
-                return ResponseEntity.ok(book);
-            }
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Book> updateBook(@PathVariable Integer id, @RequestBody Book updated) {
+        return bookRepository.findById(id)
+                .map(book -> {
+                    book.setTitle(updated.getTitle());
+                    book.setAuthor(updated.getAuthor());
+                    book.setBorrowed(updated.isBorrowed());
+                    return ResponseEntity.ok(bookRepository.save(book));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable int id) {
-        boolean removed = books.removeIf(book -> book.getId() == id);
-        if (removed) {
-            return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deleteBook(@PathVariable Integer id) {
+        if (!bookRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        bookRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
